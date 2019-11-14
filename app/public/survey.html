@@ -199,6 +199,118 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
+    <script type="text/javascript">
+        
+
+        // CAPTURE THE FORM INPUTS
+        $("#submit").on("click", function(event) {
+          event.preventDefault();
     
+          // FUNCTION FOR FORM VALIDATION
+          function validateForm() {
+            var isValid = true;
+            $(".form-control").each(function() {
+              if ($(this).val() === "") {
+                isValid = false;
+              }
+            });
+    
+            $(".custom-select").each(function() {
+              if ($(this).val() === "Select a value..") {
+                isValid = false;
+              }
+            });
+            return isValid;
+          }
+    
+          // IF VALIDATED MOVE FORWARD
+          if (validateForm()) {
+            // CREARTE OBJECT FOR THE USER'S INPUT DATA
+            var userData = {
+              name: $("#name").val(),
+              photo: $("#photo").val(),
+              scores: [
+                parseInt($("#q1").val()),
+                parseInt($("#q2").val()),
+                parseInt($("#q4").val()),
+                parseInt($("#q3").val()),
+                parseInt($("#q5").val()),
+                parseInt($("#q6").val()),
+                parseInt($("#q7").val()),
+                parseInt($("#q8").val()),
+                parseInt($("#q9").val()),
+                parseInt($("#q10").val())
+              ]
+            };
+
+
+            $.get("/api/friends", function(data) {
+              
+              console.log('This is the user data results:');
+              console.log(userData);
+
+              let nameArray = [];
+              let resultArray = [];
+              let picArray = [];
+
+              for(let i = 0; i < data.length; i++ ){
+                nameArray.push(data[i].name);
+                picArray.push(data[i].photo);
+
+                let totalScore = 0;
+
+                for(let j = 0; j < data[i].scores.length; j++){
+                   totalScore += Math.abs(data[i].scores[j] - userData.scores[j])
+                }
+                resultArray.push(totalScore);
+              }
+
+              console.log('this is the result array', resultArray);  
+            
+              let lowValue = resultArray[0];
+              let bestFriendIndex = 0;
+
+              for(let k = 0; k < resultArray.length; k++){
+               
+                if(resultArray[k] < lowValue){
+                  bestFriendIndex = k;
+                  lowValue = resultArray[k];
+                }
+              }
+
+              let bestiePhoto = picArray[bestFriendIndex];
+              let bestieName = nameArray[bestFriendIndex];
+
+              console.log('Bestie: ');
+              console.log(bestieName, bestiePhoto);
+
+               //Grab the result fromt he AJAX post so that the best match's name and photo are displayed.
+            $("#match-name").text(bestieName);
+            $("#match-img").attr('src',bestiePhoto);
+
+            //Show the modal with the best match
+            $("#results-modal").modal("toggle");
+            
+              
+          }).then(
+            
+          $.post("/api/friends", userData, 
+          function(data) {
+   
+          }),
+            console.log("Match Complete"));
+
+          // AJAX post the data to the friends API.
+         
+          } else {
+            alert("Please fill out all fields before submitting!");
+          }
+        });
+
+        
+      </script>
+    
+    
+
   </body>
 </html>
